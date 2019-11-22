@@ -30,6 +30,7 @@ func LoadMysqlConfig() (IFMysqlCon *MysqlConfig) {
 			&model.Model{},
 			&model.Admin{},
 			&model.Article{},
+			&model.Kind{},
 		},
 	}
 	return

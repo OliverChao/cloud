@@ -25,7 +25,7 @@ func main() {
 	//logrus.SetLevel(IFconBase.LogLevel)
 	forever.MysqlRegister()
 	forever.RedisRegister()
-
+	forever.InitResourceDirs()
 	//gin.SetMode(gin.DebugMode)
 	router := controller.RegisterRouterMap()
 
@@ -34,7 +34,6 @@ func main() {
 		Handler: router,
 	}
 	ExitServerHandler(server)
-
 	if err := server.ListenAndServe(); err != nil {
 		logrus.Errorf("serve listens failed: %v", err)
 	}

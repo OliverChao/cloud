@@ -1,8 +1,9 @@
 package forever
 
 import (
+	"cloud/model"
 	"fmt"
-	"iFei/model"
+	"github.com/sirupsen/logrus"
 	"testing"
 )
 
@@ -12,15 +13,26 @@ func TestBaseConRegister(t *testing.T) {
 func TestMysqlRegister(t *testing.T) {
 
 	MysqlRegister()
-
+	kind := &model.Kind{
+		Model: model.Model{
+			ID: 3,
+		},
+	}
+	//db.Delete(&kind)
+	//db.Model(&kind).Update("deleted_at",nil)
+	db.Unscoped().Model(&kind).Update("deleted_at", nil)
 	MysqlUnRegister()
 }
 func TestMysqlFunction(t *testing.T) {
 
 	MysqlRegister()
-	//QueryDemo()
-	//MysqlDropAll()
-	//CreateDemo()
+	//kinds := make([]*model.Kind,0)
+	var kinds []*model.Kind
+	db.Find(&kinds)
+	fmt.Println(kinds)
+	for _, v := range kinds {
+		fmt.Println(v)
+	}
 	MysqlUnRegister()
 }
 func TestFunction(t *testing.T) {
@@ -41,17 +53,48 @@ func TestFunction(t *testing.T) {
 }
 
 func TestRedisRegister(t *testing.T) {
+	MysqlRegister()
 	RedisRegister()
-	a1 := client.HGetAll("article:1:4")
-	a2 := client.HGetAll("article:1:5")
-	a3 := client.HGetAll("article:1:6")
-	fmt.Printf(a1.String())
-	fmt.Printf(a2.String())
-	fmt.Printf(a3.String())
+	//a1 := client.HGetAll("article:1:4")
+	//a2 := client.HGetAll("article:1:5")
+	//a3 := client.HGetAll("article:1:6")
+	//fmt.Printf(a1.String())
+	//fmt.Printf(a2.String())
+	//fmt.Printf(a3.String())
+	RedisInitData()
 	RedisUnRegister()
+	MysqlUnRegister()
 }
 
 func TestMysqlDropAll(t *testing.T) {
 	MysqlDropAll()
 	MysqlUnRegister()
+}
+
+func TestRedisGetH(t *testing.T) {
+	RedisRegister()
+	//b:=IsExitsKind("topic_one")
+	//logrus.Info(b)
+	all := client.HGetAll("kinds")
+	val := all.Val()
+	for k, v := range val {
+		fmt.Println(k, " => ", v)
+	}
+	RedisUnRegister()
+}
+
+func TestRedisHGetall(t *testing.T) {
+	RedisRegister()
+	//b:=IsExitsKind("topic_one")
+	//logrus.Info(b)
+	m := test()
+	logrus.Info(m)
+	fmt.Println(m["1"])
+	RedisUnRegister()
+}
+
+func TestMysqlInitData(t *testing.T) {
+	MysqlRegister()
+	MysqlUnRegister()
+	//MysqlInitData()
 }

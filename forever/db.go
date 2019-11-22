@@ -47,6 +47,10 @@ func DropAll(con *mysqlCon.MysqlConfig) {
 	db.DropTableIfExists(con.Models...)
 }
 
+func DelectKind(name string) {
+
+}
+
 //func CreateDemo() {
 //	comment := model.Comment{
 //		ArticleID: 1,

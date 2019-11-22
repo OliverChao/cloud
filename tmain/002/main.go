@@ -1,6 +1,6 @@
 package main
 
-import "iFei/forever"
+import "cloud/forever"
 
 func main() {
 	forever.MysqlRegister()

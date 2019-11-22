@@ -1,12 +1,12 @@
 package main
 
 import (
+	"cloud/model"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v7"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
-	"cloud/model"
 	"net/http"
 	"os"
 	"os/signal"

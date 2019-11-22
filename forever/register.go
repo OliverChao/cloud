@@ -1,10 +1,12 @@
 package forever
 
 import (
-	"github.com/sirupsen/logrus"
 	"cloud/config/baseCon"
 	"cloud/config/mysqlCon"
 	"cloud/config/redisCon"
+	"cloud/model"
+	"github.com/sirupsen/logrus"
+	"os"
 )
 
 func BaseConRegister() {
@@ -15,11 +17,6 @@ func BaseConRegister() {
 func MysqlRegister() {
 	IFMysqlCon := mysqlCon.LoadMysqlConfig()
 	Connect(IFMysqlCon)
-	//db, err := gorm.Open("mysql", IFMysqlCon.MysqlUri)
-	//if err != nil{
-	//	logrus.Errorf("connect mysql error...")
-	//	return
-	//}
 }
 
 func MysqlDropAll() {
@@ -31,5 +28,57 @@ func MysqlDropAll() {
 func RedisRegister() {
 	redisConfig := redisCon.LoadRedisConfig()
 	ConnectRedis(redisConfig)
+	RedisInitData()
 
+}
+
+func MysqlInitData() {
+	kinds := []*model.Kind{
+		{
+			Name:  "国际公约",
+			Count: 0,
+		},
+		{
+			Name:  "法律",
+			Count: 0,
+		},
+		{
+			Name:  "行政法规",
+			Count: 0,
+		},
+		{
+			Name:  "部门规章",
+			Count: 0,
+		},
+	}
+	for _, v := range kinds {
+		db.Create(&v)
+	}
+
+	admin := &model.Admin{
+		Name:              "admin",
+		Password:          "admin",
+		TotalArticleCount: 0,
+	}
+	db.Create(&admin)
+
+}
+
+func RedisInitData() {
+	client.FlushAll()
+
+	var kinds []*model.Kind
+	db.Find(&kinds)
+	for _, v := range kinds {
+		client.HSet("kinds", v.Name, v.Count)
+	}
+	//db.Find()
+}
+
+func InitResourceDirs() {
+	all := client.HGetAll("kinds")
+	m := all.Val()
+	for k, _ := range m {
+		_ = os.Mkdir("resource/"+k, os.ModePerm)
+	}
 }

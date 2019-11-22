@@ -6,8 +6,18 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func AddArticle(article *model.Article) {
-	//todo : 从 userid 中查出user, 更改user信息
+func AddKindToMysql(name string) {
+	kind := &model.Kind{
+		Name:  name,
+		Count: 0,
+	}
+	db.Create(&kind)
+	//db
+}
+
+//func WriteNewFileToMysql()
+
+func addArticle(article *model.Article) {
 	db.Create(article)
 }
 
