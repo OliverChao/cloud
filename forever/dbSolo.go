@@ -21,7 +21,7 @@ func addArticle(article *model.Article) {
 	db.Create(article)
 }
 
-func VerifyUser(name, passwd string) (*model.Admin, error) {
+func VerifyUser(name, passwd string) error {
 	user := &model.Admin{
 		Name:     name,
 		Password: passwd,
@@ -30,12 +30,11 @@ func VerifyUser(name, passwd string) (*model.Admin, error) {
 	db.Model(&user).Find(&user)
 	if user.Password != passwd {
 		logrus.Error("VerifyUser failed")
-		return nil, errors.New("VerifyUser failed")
+		return errors.New("VerifyUser failed")
 	} else {
 		logrus.Info("VerifyUser successfully")
 	}
-	return user, nil
-
+	return nil
 }
 
 //func GetArticleByID(id int)model.Article{

@@ -28,7 +28,7 @@ func MysqlDropAll() {
 func RedisRegister() {
 	redisConfig := redisCon.LoadRedisConfig()
 	ConnectRedis(redisConfig)
-	RedisInitData()
+	//RedisInitData()
 
 }
 
@@ -55,9 +55,10 @@ func MysqlInitData() {
 		db.Create(&v)
 	}
 
+	//pwd : Sealaw@520
 	admin := &model.Admin{
 		Name:              "admin",
-		Password:          "admin",
+		Password:          "a0404ae3334ec51621e5161a13e82caa320d046bef7fd1f8b34e355d1968beef",
 		TotalArticleCount: 0,
 	}
 	db.Create(&admin)

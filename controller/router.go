@@ -1,11 +1,11 @@
 package controller
 
 import (
-	"bufio"
+	"cloud/controller/handlerFuncs"
+	"cloud/controller/middleware"
 	"cloud/echo"
 	"cloud/forever"
-	"crypto/sha256"
-	"encoding/hex"
+	"cloud/shadow"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
@@ -27,14 +27,21 @@ func RegisterRouterMap() *gin.Engine {
 		Secure:   strings.HasPrefix("http://127.0.0.1", "https"),
 		HttpOnly: true,
 	})
+
 	engine.Use(sessions.Sessions("law", store))
+	engine.LoadHTMLGlob("templates/*")
 
 	engine.StaticFS("/resource", http.Dir("resource"))
+
 	engine.Any("/", func(c *gin.Context) {
 		c.JSON(200, "Yoo~~~ Hello~~~ iFei~~~")
 	})
 
-	engine.LoadHTMLGlob("templates/*")
+	engine.GET("/cloud/login", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "login.html", gin.H{})
+	})
+
+	engine.POST("/cloud/login", handlerFuncs.Login)
 
 	engine.GET("/upload", func(c *gin.Context) {
 		m := forever.GetAllKindFromRedis()
@@ -48,64 +55,8 @@ func RegisterRouterMap() *gin.Engine {
 	//engine.POST("/upload", func(c *gin.Context) {
 	//	c.String(200, "get post request")
 	//})
-
-	engine.POST("/upload", func(c *gin.Context) {
-		ret := echo.NewRetResult()
-		ret.Code = -1
-		defer c.JSON(http.StatusOK, ret)
-
-		file, err := c.FormFile("upload")
-		if err != nil {
-			ret.Msg = "no file upload"
-			return
-		}
-		open, e := file.Open()
-		defer open.Close()
-		if e != nil {
-			ret.Msg = "get file hash error"
-			return
-		}
-		reader := bufio.NewReader(open)
-		sha := sha256.New()
-		reader.WriteTo(sha)
-		sum := sha.Sum(nil)
-
-		hashHex := hex.EncodeToString(sum)
-		ret.Data = hashHex
-
-		//logrus.Info(c.PostForm("select"))
-		kindName := c.PostForm("select")
-		filePath := strings.Join([]string{"resource", kindName, file.Filename}, "/")
-		split := strings.Split(file.Filename, ".")
-		topic := strings.Join(split[:len(split)-1], ".")
-		e = c.SaveUploadedFile(file, filePath)
-		if e != nil {
-			ret.Msg = "upload failed"
-		} else {
-			ret.Code = 1
-			ret.Msg = "upload successfully"
-			ret.Data = filePath
-			//	todo : change mysql and redis
-			forever.AddFileToKind(kindName, filePath, topic, hashHex)
-		}
-	})
-
-	engine.POST("/multi/upload", func(c *gin.Context) {
-		// Multipart form
-		form, _ := c.MultipartForm()
-		files := form.File["upload"]
-		kindName := c.PostForm("select")
-		logrus.Info(kindName)
-		for _, file := range files {
-			//filePath := strings.Join([]string{"resource",kindName,file.Filename},"/")
-			//split := strings.Split(file.Filename, ".")
-			//topic := strings.Join(split[:len(split)-1],".")
-			//e := c.SaveUploadedFile(file, filePath)
-			logrus.Info(file.Filename)
-			// c.SaveUploadedFile(file, dst)
-		}
-		c.String(http.StatusOK, "%d files uploaded!", len(files))
-	})
+	engine.POST("/upload", handlerFuncs.UploadOneFile)
+	engine.POST("/multi/upload", handlerFuncs.UploadMultiFiles)
 
 	engine.GET("/createkind", func(c *gin.Context) {
 		//c.String(200,c.Request.Header.Get("Content-Type"))
@@ -125,19 +76,47 @@ func RegisterRouterMap() *gin.Engine {
 	})
 
 	api := engine.Group("/api")
-	//api.Use(middleware.LoginCheck)
+	api.Use(middleware.LoginCheck)
 
 	api.GET("/", func(c *gin.Context) {
-		c.String(200, "this is api group")
+		defer c.String(200, "this is api group")
+
+		session := sessions.Default(c)
+		get, ok := session.Get("token").(string)
+		if !ok {
+			return
+		}
+		logrus.Info(get)
+		data, sign := shadow.UnParseToken(get)
+		logrus.Info("[data] is ", string(data))
+		err := shadow.RsaVerify(data, sign)
+		if err != nil {
+			logrus.Error("verify failed")
+		} else {
+
+		}
 	})
 
 	api.GET("/getkinds", func(c *gin.Context) {
-		s, e := forever.GetKindsFromRedis()
+		ret := echo.NewRetResult()
+		ret.Code = -1
+		defer c.JSON(200, ret)
+		s := forever.GetKindsFromRedis()
+		ret.Data = s
+		ret.Code = 1
+	})
+
+	api.GET("/kinds/:kind", func(c *gin.Context) {
+		ret := echo.NewRetResult()
+		ret.Code = -1
+		defer c.JSON(200, ret)
+		kind := c.Param("kind")
+		m, e := forever.GetAllArticleFromRedis(kind)
 		if e != nil {
-			c.String(200, "[getkinds] get redis error %v", e)
-		} else {
-			c.String(200, s)
+			ret.Data = e.Error()
+			return
 		}
+		ret.Data = m
 	})
 
 	return engine

@@ -1,9 +1,9 @@
 package forever
 
 import (
+	"cloud/config/redisCon"
 	"github.com/go-redis/redis/v7"
 	"github.com/sirupsen/logrus"
-	"cloud/config/redisCon"
 )
 
 var client *redis.Client

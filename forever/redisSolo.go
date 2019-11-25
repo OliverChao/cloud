@@ -21,10 +21,13 @@ func StoreArticleInfo(article *model.Article) {
 	//client.Expire(key, 11400*time.Second)
 }
 
-func GetKindsFromRedis() (string, error) {
-	get := client.Get("kinds")
-	s, e := get.Result()
-	return s, e
+func GetKindsFromRedis() map[string]string {
+	//get := client.Get("kinds")
+	//s, e := get.Result()
+	//return s, e
+	all := client.HGetAll("kinds")
+	m := all.Val()
+	return m
 }
 
 func IsExitsKind(name string) bool {

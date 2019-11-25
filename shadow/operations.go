@@ -75,6 +75,7 @@ func RsaVerify(originalData, signData []byte) error {
 
 	hash := sha1.New()
 	hash.Write(originalData)
+	logrus.Info("verify successfully")
 	return rsa.VerifyPKCS1v15(pub, crypto.SHA1, hash.Sum(nil), signData)
 
 }
