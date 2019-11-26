@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/sirupsen/logrus"
 	"mime/multipart"
 	"net/http"
@@ -97,4 +98,71 @@ func UploadOneFile(c *gin.Context) {
 		//	to//do : change mysql and redis
 		forever.AddFileToKind(kindName, filePath, topic, hashHex, 1)
 	}
+}
+
+type DeleteData struct {
+	Name string `form:"name" json:"name" binding:"required"`
+	Kind string `form:"kind" json:"kind" binding:"required"`
+}
+
+func DeleteArticle(c *gin.Context) {
+	ret := echo.NewRetResult()
+	ret.Code = -1
+	defer c.JSON(200, ret)
+	var data DeleteData
+	var err error
+	contentType := c.Request.Header.Get("Content-Type")
+
+	switch contentType {
+	case "application/json":
+		err = c.BindJSON(&data)
+	case "application/x-www-form-urlencoded":
+		err = c.MustBindWith(&data, binding.FormPost)
+	}
+	if err != nil {
+		logrus.Error(err)
+		ret.Msg = err.Error()
+		return
+	}
+	logrus.Info(data)
+	if err := forever.DeleteArticleFunc(data.Name, data.Kind); err != nil {
+		ret.Msg = err.Error()
+		return
+	}
+	ret.Msg = "delete successfully"
+	ret.Code = 1
+}
+
+type deleteKind struct {
+	Kind string `form:"kind" json:"kind" binding:"required"`
+}
+
+func DeleteKindFunc(c *gin.Context) {
+	ret := echo.NewRetResult()
+	ret.Code = -1
+	defer c.JSON(200, ret)
+	var data deleteKind
+	var err error
+	contentType := c.Request.Header.Get("Content-Type")
+
+	switch contentType {
+	case "application/json":
+		err = c.BindJSON(&data)
+	case "application/x-www-form-urlencoded":
+		err = c.MustBindWith(&data, binding.FormPost)
+	}
+
+	if err != nil {
+		logrus.Error(err)
+		ret.Msg = err.Error()
+		return
+	}
+	logrus.Info(data)
+	if err := forever.DeleteKindFunc(data.Kind); err != nil {
+		ret.Msg = err.Error()
+		return
+	}
+	ret.Msg = "delete successfully"
+	ret.Code = 1
+
 }

@@ -2,12 +2,9 @@ package forever
 
 import (
 	"cloud/model"
-	"encoding/json"
 	"fmt"
-	uuid "github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 	"testing"
-	"time"
 )
 
 func TestBaseConRegister(t *testing.T) {
@@ -81,12 +78,9 @@ func TestRedisRegister(t *testing.T) {
 
 	RedisRegister()
 	RedisInitData()
-	//a1 := client.HGetAll("article:1:4")
-	//a2 := client.HGetAll("article:1:5")
-	//a3 := client.HGetAll("article:1:6")
-	//fmt.Printf(a1.String())
-	//fmt.Printf(a2.String())
-	//fmt.Printf(a3.String())
+
+	InitResourceDirs()
+
 	RedisUnRegister()
 	MysqlUnRegister()
 }
@@ -113,30 +107,31 @@ func TestRedisGetH(t *testing.T) {
 
 func TestRedisHGetall(t *testing.T) {
 	RedisRegister()
-	v4 := uuid.NewV4()
-	article := &model.Article{
-		UUID:     v4.String(),
-		PushedAt: time.Now(),
-		Title:    "filename",
-		Content:  "",
-		Path:     "filepath",
-		KindName: "kindname",
-		HashData: "hashdata",
-	}
-	data := article.GenRedisData()
-	bytes, _ := json.Marshal(data)
-
-	fmt.Println(string(bytes))
-	//fmt.Println(data["kind"].(string),data["id"].(string))
-	//client.HSet(data["kind"].(string),data["title"].(string),string(bytes))
-	m := map[string]string{}
-	get := client.HGet(data["kind"].(string), data["title"].(string))
-	err := json.Unmarshal([]byte(get.Val()), &m)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	fmt.Println(m)
+	InitResourceDirs()
+	//v4 := uuid.NewV4()
+	//article := &model.Article{
+	//	UUID:     v4.String(),
+	//	PushedAt: time.Now(),
+	//	Title:    "filename",
+	//	Content:  "",
+	//	Path:     "filepath",
+	//	KindName: "kindname",
+	//	HashData: "hashdata",
+	//}
+	//data := article.GenRedisData()
+	//bytes, _ := json.Marshal(data)
+	//
+	//fmt.Println(string(bytes))
+	////fmt.Println(data["kind"].(string),data["id"].(string))
+	////client.HSet(data["kind"].(string),data["title"].(string),string(bytes))
+	//m := map[string]string{}
+	//get := client.HGet(data["kind"].(string), data["title"].(string))
+	//err := json.Unmarshal([]byte(get.Val()), &m)
+	//if err != nil {
+	//	logrus.Error(err)
+	//	return
+	//}
+	//fmt.Println(m)
 
 	RedisUnRegister()
 }

@@ -48,6 +48,7 @@ func AddKindToRedis(name string) {
 }
 
 func test() map[string]string {
+
 	all := client.HGetAll("a")
 	return all.Val()
 }

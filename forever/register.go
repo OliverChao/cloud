@@ -29,7 +29,6 @@ func RedisRegister() {
 	redisConfig := redisCon.LoadRedisConfig()
 	ConnectRedis(redisConfig)
 	//RedisInitData()
-
 }
 
 func MysqlInitData() {
@@ -80,6 +79,11 @@ func InitResourceDirs() {
 	all := client.HGetAll("kinds")
 	m := all.Val()
 	for k, _ := range m {
-		_ = os.Mkdir("resource/"+k, os.ModePerm)
+		logrus.Info(k)
+		err := os.Mkdir("resource/"+k, os.ModePerm)
+		if err != nil {
+			logrus.Error(err)
+		}
+
 	}
 }

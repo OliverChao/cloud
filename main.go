@@ -25,7 +25,9 @@ func main() {
 	//logrus.SetLevel(IFconBase.LogLevel)
 	forever.MysqlRegister()
 	forever.RedisRegister()
-	forever.InitResourceDirs()
+	//forever.InitResourceDirs()
+	forever.RiotRegister()
+	forever.InitRiot()
 	//gin.SetMode(gin.DebugMode)
 	router := controller.RegisterRouterMap()
 
@@ -53,6 +55,7 @@ func ExitServerHandler(server *http.Server) {
 		// unregister here
 		forever.MysqlUnRegister()
 		forever.RedisUnRegister()
+		forever.RiotUnregister()
 
 		os.Exit(0)
 	}()

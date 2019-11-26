@@ -19,7 +19,7 @@ type Article struct {
 
 func (t *Article) GenRedisData() map[string]interface{} {
 	m := map[string]interface{}{}
-	m["id"] = strconv.FormatUint(uint64(t.ID), 10)
+	m["id"] = strconv.Itoa(int(t.ID))
 	m["title"] = t.Title
 	m["path"] = t.Path
 	m["kind"] = t.KindName

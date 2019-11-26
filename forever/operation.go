@@ -30,7 +30,7 @@ func AddNewKind(name string) bool {
 	return true
 }
 
-func AddFileToKind(kindname, filepath, filename, hashdata string, count int) {
+func AddFileToKind(kindname, filepath, title, hashdata string, count int) {
 	var wg *sync.WaitGroup = &sync.WaitGroup{}
 	splits := strings.Split(filepath, "/")
 	fullName := splits[len(splits)-1]
@@ -41,7 +41,7 @@ func AddFileToKind(kindname, filepath, filename, hashdata string, count int) {
 		article := &model.Article{
 			UUID:     v4.String(),
 			PushedAt: time.Now(),
-			Title:    filename,
+			Title:    title,
 			Content:  "",
 			Path:     filepath,
 			KindName: kindname,
@@ -49,8 +49,12 @@ func AddFileToKind(kindname, filepath, filename, hashdata string, count int) {
 			FullName: fullName,
 		}
 		//db.Create(&article)
-		addArticleInfoToRedis(article)
+		// 先入mysql 会更新 article的值, 补全后,再存入redis
 		_ = addArticleMutex(article)
+		addArticleInfoToRedis(article)
+
+		// update search engine
+		//search.AddDoc(kindname, title)
 	}()
 
 	kind := &model.Kind{
@@ -103,6 +107,67 @@ func addArticleMutex(a *model.Article) (err error) {
 	if err = tx.Create(&a).Error; nil != err {
 		fmt.Println(err)
 		return
+	}
+	return nil
+}
+
+// 删除resource/ 下的文件, 更改数据库
+func DeleteArticleFunc(name, kind string) error {
+	get := client.HGet(kind, name)
+	s, e := get.Result()
+	if e != nil {
+		//logrus.Error("redis no this data")
+		return e
+	}
+	// by is the number after change redis
+	by := client.HIncrBy("kinds", kind, -1)
+	num := by.Val()
+	//logrus.Info(by.Val())
+	m := map[string]string{}
+	_ = json.Unmarshal([]byte(s), &m)
+	logrus.Info(m)
+	article := &model.Article{
+		Title:    m["title"],
+		KindName: m["kind"],
+		HashData: m["hash"],
+	}
+	k := &model.Kind{
+		Name: m["kind"],
+	}
+	db.Where(&article).Find(&article).Delete(&article)
+	db.Model(&model.Kind{}).Where(&k).Select("count").Update("count", int(num))
+	logrus.Info(article)
+	err := os.Remove(m["path"])
+	if err != nil {
+		logrus.Error("[DeleteArticleFunc]", err)
+	}
+	//db.Model(&article).Delete(&article)
+	client.HDel(kind, name)
+	return nil
+}
+
+func DeleteKindFunc(kind string) error {
+
+	get := client.HDel("kinds", kind)
+	i, e := get.Result()
+	if e != nil {
+		logrus.Error(e)
+		return e
+	}
+	logrus.Info(i)
+	if i == 0 {
+		return fmt.Errorf("no kind %s", kind)
+	}
+	//清除 redis 数据
+	client.Expire(kind, 0)
+
+	db.Where("kind_name like ?", kind).Delete(model.Article{})
+	db.Where("name like ?", kind).Delete(model.Kind{})
+
+	path := "resource/" + kind
+	err := os.RemoveAll(path)
+	if err != nil {
+		logrus.Error(err)
 	}
 	return nil
 }

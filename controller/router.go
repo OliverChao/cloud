@@ -3,7 +3,6 @@ package controller
 import (
 	"cloud/controller/handlerFuncs"
 	"cloud/controller/middleware"
-	"cloud/echo"
 	"cloud/forever"
 	"cloud/shadow"
 	"github.com/gin-contrib/sessions"
@@ -30,7 +29,6 @@ func RegisterRouterMap() *gin.Engine {
 
 	engine.Use(sessions.Sessions("law", store))
 	engine.LoadHTMLGlob("templates/*")
-
 	engine.StaticFS("/resource", http.Dir("resource"))
 
 	engine.Any("/", func(c *gin.Context) {
@@ -40,7 +38,6 @@ func RegisterRouterMap() *gin.Engine {
 	engine.GET("/cloud/login", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "login.html", gin.H{})
 	})
-
 	engine.POST("/cloud/login", handlerFuncs.Login)
 
 	engine.GET("/upload", func(c *gin.Context) {
@@ -75,17 +72,41 @@ func RegisterRouterMap() *gin.Engine {
 		}
 	})
 
+	engine.GET("/search", func(c *gin.Context) {
+		query := c.Query("q")
+		if query == "" {
+			//	返回所有article
+			return
+		}
+		orSearch := forever.OrSearch(query)
+		c.JSON(200, orSearch.Docs)
+	})
+
+	sealaw := engine.Group("/sealaw")
+	sealaw.GET("/index", handlerFuncs.SealawIndex)
+
+	//sealaw.GET("/index", func(c *gin.Context) {
+	//	m := forever.GetKindsFromRedis()
+	//	c.HTML(200, "index.html", gin.H{
+	//		"options": m,
+	//	})
+	//})
+
+	sealaw.GET("/kinds/:kind", handlerFuncs.SealawKinds)
+
+	//sealaw.GET("/search",)
+
 	api := engine.Group("/api")
 	api.Use(middleware.LoginCheck)
 
 	api.GET("/", func(c *gin.Context) {
 		defer c.String(200, "this is api group")
-
 		session := sessions.Default(c)
 		get, ok := session.Get("token").(string)
 		if !ok {
 			return
 		}
+
 		logrus.Info(get)
 		data, sign := shadow.UnParseToken(get)
 		logrus.Info("[data] is ", string(data))
@@ -97,27 +118,9 @@ func RegisterRouterMap() *gin.Engine {
 		}
 	})
 
-	api.GET("/getkinds", func(c *gin.Context) {
-		ret := echo.NewRetResult()
-		ret.Code = -1
-		defer c.JSON(200, ret)
-		s := forever.GetKindsFromRedis()
-		ret.Data = s
-		ret.Code = 1
-	})
+	api.POST("/delete/article", handlerFuncs.DeleteArticle)
 
-	api.GET("/kinds/:kind", func(c *gin.Context) {
-		ret := echo.NewRetResult()
-		ret.Code = -1
-		defer c.JSON(200, ret)
-		kind := c.Param("kind")
-		m, e := forever.GetAllArticleFromRedis(kind)
-		if e != nil {
-			ret.Data = e.Error()
-			return
-		}
-		ret.Data = m
-	})
+	api.POST("/delete/kind", handlerFuncs.DeleteKindFunc)
 
 	return engine
 }
