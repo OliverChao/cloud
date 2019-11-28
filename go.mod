@@ -21,6 +21,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.0.1 // indirect
 	github.com/lib/pq v1.2.0 // indirect
+	github.com/lu4p/cat v0.1.1
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.4.2

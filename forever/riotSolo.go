@@ -106,16 +106,37 @@ func _search(searchType string, query string) *types.SearchDoc {
 }
 
 func DeleteDoc(docId string) {
+
 	go searcher.RemoveDoc(docId)
+
 }
 
-//func DeleteDocByNameKind(kind,name string){
-//	var logic = types.Logic{
-//		Must:   true,
-//		Expr:   types.Expr{
-//			Must:   nil,
-//			Should: nil,
-//			NotIn:  nil,
-//		},
-//	}
-//}
+func RiotDeleteDocByNameKind(kind, name string) {
+	var logic = types.Logic{
+		Must: true,
+		Expr: types.Expr{
+			Must:   []string{name},
+			Should: nil,
+			NotIn:  nil,
+		},
+	}
+	//andSearch := AndSearch(name)
+	req := types.SearchReq{
+		Text:    name,
+		Logic:   logic,
+		Timeout: 3000,
+	}
+	andSearch := searcher.SearchDoc(req)
+
+	var docId string
+
+	for _, v := range andSearch.Docs {
+		if s, ok := v.Attri.(string); !ok || s != kind {
+			continue
+		} else {
+			docId = v.DocId
+		}
+	}
+	logrus.Infof("remove docID %v \n", docId)
+	go searcher.RemoveDoc(docId)
+}

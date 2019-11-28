@@ -1,7 +1,11 @@
 package utils
 
 import (
+	"fmt"
+	"github.com/lu4p/cat"
+	"github.com/sirupsen/logrus"
 	"reflect"
+	"strings"
 )
 
 //obj must be `pointer`of some struct
@@ -21,4 +25,16 @@ func Struct2Map(obj interface{}) map[string]interface{} {
 		data[s] = v.Elem().Field(i).Interface()
 	}
 	return data
+}
+
+func ReadDoc(path string) (string, error) {
+	if strings.HasSuffix(path, ".doc") {
+		return "", fmt.Errorf("pdf format")
+	}
+
+	s, e := cat.File(path)
+	if e != nil {
+		logrus.Error(e)
+	}
+	return s, nil
 }

@@ -2,7 +2,6 @@ package handlerFuncs
 
 import (
 	"bufio"
-	"cloud/echo"
 	"cloud/forever"
 	"crypto/sha256"
 	"encoding/hex"
@@ -35,9 +34,12 @@ func _fb(f multipart.File, kindName, filename string) (hashHex, filePath, topic 
 }
 
 func UploadMultiFiles(c *gin.Context) {
-	ret := echo.NewRetResult()
-	ret.Code = -1
-	defer c.JSON(http.StatusOK, ret)
+	m := forever.GetAllKindFromRedis()
+	defer c.HTML(200, "hint_upload.html", gin.H{})
+	defer c.HTML(http.StatusOK, "admin_onload.html", gin.H{
+		"name":    "admin",
+		"options": m,
+	})
 
 	form, _ := c.MultipartForm()
 	files := form.File["upload"]
@@ -47,40 +49,47 @@ func UploadMultiFiles(c *gin.Context) {
 	for _, file := range files {
 		open, e := file.Open()
 		if e != nil {
-			ret.Msg = "get file hash failed"
+			// ret.Msg = "get file hash failed"
 			return
 		}
 		hashHex, filePath, topic := _fb(open, kindName, file.Filename)
 		open.Close()
 		e = c.SaveUploadedFile(file, filePath)
 		if e != nil {
-			ret.Msg = "upload failed"
+			c.HTML(200, "hint_upload_fail.html", gin.H{})
+
+			// ret.Msg = "upload failed"
 		} else {
 			forever.AddFileToKind(kindName, filePath, topic, hashHex, 1)
 		}
 		logrus.Info(file.Filename)
 	}
-	ret.Code = 1
-	ret.Msg = "upload successfully"
+	// ret.Code = 1
+	// ret.Msg = "upload successfully"
 	return
 }
 
 func UploadOneFile(c *gin.Context) {
-	ret := echo.NewRetResult()
-	ret.Code = -1
-	defer c.JSON(http.StatusOK, ret)
+	// ret := echo.NewRetResult()
+	// ret.Code = -1
+	m := forever.GetAllKindFromRedis()
+	defer c.HTML(200, "hint_upload.html", gin.H{})
+	defer c.HTML(http.StatusOK, "admin_onload.html", gin.H{
+		"name":    "admin",
+		"options": m,
+	})
 
 	file, err := c.FormFile("upload")
 	kindName := c.PostForm("select")
 	if err != nil {
-		ret.Msg = "no file upload"
+		// ret.Msg = "no file upload"
 		return
 	}
 
 	//打开文件, 计算 hashcode
 	open, e := file.Open()
 	if e != nil {
-		ret.Msg = "get file hash error"
+
 		return
 	}
 	defer open.Close()
@@ -89,15 +98,18 @@ func UploadOneFile(c *gin.Context) {
 
 	e = c.SaveUploadedFile(file, filePath)
 	if e != nil {
-		ret.Msg = "upload failed"
+		// ret.Msg = "upload failed"
+		c.HTML(200, "hint_upload_fail.html", gin.H{})
 	} else {
 		//ret.Data = hashHex
-		ret.Code = 1
-		ret.Msg = "upload successfully"
-		ret.Data = filePath
+		// ret.Code = 1	sealaw.SealawKinds(
+		// ret.Msg = "upload successfully"
+		// ret.Data = filePath
 		//	to//do : change mysql and redis
 		forever.AddFileToKind(kindName, filePath, topic, hashHex, 1)
+
 	}
+
 }
 
 type DeleteData struct {
@@ -106,9 +118,9 @@ type DeleteData struct {
 }
 
 func DeleteArticle(c *gin.Context) {
-	ret := echo.NewRetResult()
-	ret.Code = -1
-	defer c.JSON(200, ret)
+	// ret := echo.NewRetResult()
+	// ret.Code = -1
+	// defer c.JSON(200, ret)
 	var data DeleteData
 	var err error
 	contentType := c.Request.Header.Get("Content-Type")
@@ -121,16 +133,23 @@ func DeleteArticle(c *gin.Context) {
 	}
 	if err != nil {
 		logrus.Error(err)
-		ret.Msg = err.Error()
+		// ret.Msg = err.Error()
 		return
 	}
 	logrus.Info(data)
 	if err := forever.DeleteArticleFunc(data.Name, data.Kind); err != nil {
-		ret.Msg = err.Error()
+		// ret.Msg = err.Error()
 		return
 	}
-	ret.Msg = "delete successfully"
-	ret.Code = 1
+	// ret.Msg = "dec.Redirect(http.StatusMovedPermanently, "http://www.baidu.com/")
+	// ret.Code = 1)c.Redirect(http.StatusMovedPermanently, "http://www.baidu.com/")
+	//成功则执行以下，重新渲染页面
+	kind := c.Param("kind")
+	m_2 := forever.GetKindsFromRedis()
+	c.HTML(200, "list_parent.html", gin.H{
+		"options": m_2,
+		"k":       kind,
+	})
 }
 
 type deleteKind struct {
@@ -138,9 +157,10 @@ type deleteKind struct {
 }
 
 func DeleteKindFunc(c *gin.Context) {
-	ret := echo.NewRetResult()
-	ret.Code = -1
-	defer c.JSON(200, ret)
+
+	// ret := echo.NewRetResult()
+	// ret.Code = -1
+	// defer c.JSON(200, ret)
 	var data deleteKind
 	var err error
 	contentType := c.Request.Header.Get("Content-Type")
@@ -154,15 +174,24 @@ func DeleteKindFunc(c *gin.Context) {
 
 	if err != nil {
 		logrus.Error(err)
-		ret.Msg = err.Error()
+		// ret.Msg = err.Error()
+		// c.HTML(200, "admin_createkind.html", gin.H{
+		// 	"options": m,
+		// })
+
 		return
 	}
 	logrus.Info(data)
 	if err := forever.DeleteKindFunc(data.Kind); err != nil {
-		ret.Msg = err.Error()
+		// ret.Msg = err.Error()
 		return
 	}
-	ret.Msg = "delete successfully"
-	ret.Code = 1
+	// ret.Msg = "delete successfully"
+	// ret.Code = 1
+	m := forever.GetKindsFromRedis()
+	// defer c.HTML(200, "hint_delete_succeful.html", gin.H{})
+	defer c.HTML(200, "admin_createkind.html", gin.H{
+		"options": m,
+	})
 
 }

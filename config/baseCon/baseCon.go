@@ -21,7 +21,7 @@ type BaseConfig struct { //	redisOp := &redis.Options{
 
 func LoadBaseConfig() *BaseConfig {
 	IFcon := &BaseConfig{
-		Host: "127.0.0.1",
+		Host: "0.0.0.0",
 		Port: 8080,
 		//MysqlUri: mysqlSign,
 		//RedisUri: redisOp,

@@ -17,7 +17,6 @@ func init() {
 	//logrus.SetLevel(logrus.DebugLevel)
 	//iFcon := baseCon.InitIFcon()
 	logrus.SetLevel(logrus.DebugLevel)
-
 }
 
 func main() {
@@ -25,7 +24,7 @@ func main() {
 	//logrus.SetLevel(IFconBase.LogLevel)
 	forever.MysqlRegister()
 	forever.RedisRegister()
-	//forever.InitResourceDirs()
+	forever.InitResourceDirs()
 	forever.RiotRegister()
 	forever.InitRiot()
 	//gin.SetMode(gin.DebugMode)

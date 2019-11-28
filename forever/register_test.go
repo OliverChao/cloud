@@ -79,7 +79,7 @@ func TestRedisRegister(t *testing.T) {
 	RedisRegister()
 	RedisInitData()
 
-	InitResourceDirs()
+	//InitResourceDirs()
 
 	RedisUnRegister()
 	MysqlUnRegister()

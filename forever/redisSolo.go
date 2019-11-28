@@ -2,6 +2,9 @@ package forever
 
 import (
 	"cloud/model"
+	"cloud/utils"
+	"fmt"
+	"strings"
 )
 
 func GetArticleInfo() string {
@@ -48,7 +51,7 @@ func AddKindToRedis(name string) {
 }
 
 func test() map[string]string {
-
+	//client.E
 	all := client.HGetAll("a")
 	return all.Val()
 }
@@ -57,4 +60,24 @@ func GetAllKindFromRedis() map[string]string {
 	all := client.HGetAll("kinds")
 	m := all.Val()
 	return m
+}
+
+func CheckDocAndSave(path string) (string, error) {
+	if strings.HasSuffix(path, ".doc") {
+		return "", fmt.Errorf("doc format")
+	}
+
+	exists := client.HExists("content", path)
+	if exists.Val() {
+		get := client.HGet("content", path)
+		content := get.Val()
+		return content, nil
+	} else {
+		s, e := utils.ReadDoc(path)
+		if e != nil {
+			return s, e
+		}
+		client.HSet("content", path, s)
+		return s, nil
+	}
 }

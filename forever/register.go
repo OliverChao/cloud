@@ -87,3 +87,7 @@ func InitResourceDirs() {
 
 	}
 }
+
+//func DropResourceDirs() {
+//	all :=
+//}

@@ -29,48 +29,21 @@ func RegisterRouterMap() *gin.Engine {
 
 	engine.Use(sessions.Sessions("law", store))
 	engine.LoadHTMLGlob("templates/*")
+	engine.Static("/pan", "./pan")
 	engine.StaticFS("/resource", http.Dir("resource"))
 
 	engine.Any("/", func(c *gin.Context) {
 		c.JSON(200, "Yoo~~~ Hello~~~ iFei~~~")
 	})
 
+	engine.GET("/connect_me", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "connect_me.html", gin.H{})
+	})
+
 	engine.GET("/cloud/login", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "login.html", gin.H{})
 	})
 	engine.POST("/cloud/login", handlerFuncs.Login)
-
-	engine.GET("/upload", func(c *gin.Context) {
-		m := forever.GetAllKindFromRedis()
-		//logrus.Info(m)
-		c.HTML(http.StatusOK, "upload.html", gin.H{
-			"name":    "oliver",
-			"options": m,
-		})
-	})
-
-	//engine.POST("/upload", func(c *gin.Context) {
-	//	c.String(200, "get post request")
-	//})
-	engine.POST("/upload", handlerFuncs.UploadOneFile)
-	engine.POST("/multi/upload", handlerFuncs.UploadMultiFiles)
-
-	engine.GET("/createkind", func(c *gin.Context) {
-		//c.String(200,c.Request.Header.Get("Content-Type"))
-		c.HTML(200, "test.html", gin.H{})
-	})
-
-	engine.POST("/createkind", func(c *gin.Context) {
-		kind := c.PostForm("kind")
-		if kind == "" {
-			c.String(200, "asdasd")
-			return
-		}
-		b := forever.AddNewKind(kind)
-		if b {
-			c.String(200, "OK")
-		}
-	})
 
 	engine.GET("/search", func(c *gin.Context) {
 		query := c.Query("q")
@@ -82,8 +55,161 @@ func RegisterRouterMap() *gin.Engine {
 		c.JSON(200, orSearch.Docs)
 	})
 
+	engine.POST("/search", func(c *gin.Context) {
+		query := c.PostForm("query")
+		if query == "" {
+			//	返回所有article
+			return
+		}
+		orSearch := forever.OrSearch(query)
+		docs := orSearch.Docs
+		m := forever.GetSearchResultFromRiot(docs)
+		// c.JSON(200, orSearch.Docs)
+		c.HTML(200, "detail.html", gin.H{
+			"options": m,
+		})
+	})
+	engine.GET("/search_parent", func(c *gin.Context) {
+		query := c.Query("q")
+		if query == "" {
+			//	返回所有article
+			return
+		}
+		orSearch := forever.OrSearch(query)
+		c.JSON(200, orSearch.Docs)
+	})
+
+	engine.POST("/search_parent", func(c *gin.Context) {
+		query := c.PostForm("query")
+		if query == "" {
+			//	返回所有article
+			return
+		}
+		orSearch := forever.OrSearch(query)
+		docs := orSearch.Docs
+		m := forever.GetSearchResultFromRiot(docs)
+		// c.JSON(200, orSearch.Docs)
+		c.HTML(200, "detail_parent.html", gin.H{
+			"options": m,
+		})
+	})
+
+	auth := engine.Group("/auth")
+	auth.Use(middleware.LoginCheck)
+	//auth.GET("/upload")
+
+	auth.GET("/upload", func(c *gin.Context) {
+		m := forever.GetAllKindFromRedis()
+		//logrus.Info(m)
+		c.HTML(http.StatusOK, "admin_onload.html", gin.H{
+			"name":    "admin",
+			"options": m,
+		})
+	})
+
+	// 渲染页面
+	auth.GET("/admin_index", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "admin_index.html", gin.H{})
+	})
+
+	auth.GET("/admin_del", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "admin_del.html", gin.H{})
+	})
+
+	//engine.POST("/upload", func(c *gin.Context) {
+	//	c.String(200, "get post request")
+	//})
+	auth.POST("/upload", handlerFuncs.UploadOneFile)
+	auth.POST("/multi/upload", handlerFuncs.UploadMultiFiles)
+
+	auth.GET("/createkind", func(c *gin.Context) {
+		//c.String(200,c.Request.Header.Get("Content-Type"))
+		m := forever.GetKindsFromRedis()
+		c.HTML(200, "admin_createkind.html", gin.H{
+			"options": m,
+		})
+
+	})
+
+	auth.POST("/createkind", func(c *gin.Context) {
+		kind := c.PostForm("kind")
+		if kind == "" {
+			c.String(200, "asdasd")
+			return
+		}
+		b := forever.AddNewKind(kind)
+		if b {
+			m := forever.GetKindsFromRedis()
+			c.HTML(200, "admin_createkind.html", gin.H{
+				"options": m,
+			})
+		}
+	})
+
 	sealaw := engine.Group("/sealaw")
-	sealaw.GET("/index", handlerFuncs.SealawIndex)
+	sealaw.GET("/list", handlerFuncs.SealawIndex)
+	sealaw.GET("/list_parent", handlerFuncs.SealawIndex_2)
+	sealaw.GET("/docs/:kind/:article", func(c *gin.Context) {
+		kind := c.Param("kind")
+		article := c.Param("article")
+
+		path := forever.GetOneArticleFromRedisByTitle(kind, article)
+		s, e := forever.CheckDocAndSave(path)
+		if e != nil {
+			// doc 跳到
+			c.HTML(200, "show_detail_doc.html", gin.H{
+				"path": path,
+				"k":    kind,
+				"art":  article,
+			})
+			// c.String(200, s)
+		} else {
+			//pdf  docx txt -----
+			c.HTML(200, "show_detail.html", gin.H{
+				"text_s": s,
+				"k":      kind,
+				"art":    article,
+			})
+			// c.String(200, s)
+		}
+	})
+
+	sealaw.POST("/list", func(c *gin.Context) {
+		query := c.PostForm("query")
+		if query == "" {
+			//	返回所有article
+			return
+		}
+		orSearch := forever.OrSearch(query)
+		docs := orSearch.Docs
+		m := forever.GetSearchResultFromRiot(docs)
+		// c.JSON(200, orSearch.Docs)
+		c.HTML(200, "detail.html", gin.H{
+			"options": m,
+		})
+	})
+
+	//管理界面的list表POSt
+	sealaw.POST("/list_praent", func(c *gin.Context) {
+		query := c.PostForm("query")
+		if query == "" {
+			//	返回所有article
+			return
+		}
+		orSearch := forever.OrSearch(query)
+		docs := orSearch.Docs
+		m := forever.GetSearchResultFromRiot(docs)
+		// c.JSON(200, orSearch.Docs)
+		c.HTML(200, "detail_parent.html", gin.H{
+			"options": m,
+		})
+	})
+
+	sealaw.GET("/show_detail", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "show_detail.html", gin.H{
+			"name": "oliver",
+		})
+	})
 
 	//sealaw.GET("/index", func(c *gin.Context) {
 	//	m := forever.GetKindsFromRedis()
@@ -93,6 +219,40 @@ func RegisterRouterMap() *gin.Engine {
 	//})
 
 	sealaw.GET("/kinds/:kind", handlerFuncs.SealawKinds)
+
+	sealaw.POST("/kinds/:kind", func(c *gin.Context) {
+		query := c.PostForm("query")
+		if query == "" {
+			//	返回所有article
+			return
+		}
+		orSearch := forever.OrSearch(query)
+		docs := orSearch.Docs
+		m := forever.GetSearchResultFromRiot(docs)
+		// c.JSON(200, orSearch.Docs)
+		c.HTML(200, "detail.html", gin.H{
+			"options": m,
+		})
+	})
+	//管理界面的kinds表POST
+
+	sealaw.GET("/kinds_parent/:kind", handlerFuncs.SealawKinds_2)
+
+	//管理界面的kinds表POST
+	sealaw.POST("/kinds_parent/:kind", func(c *gin.Context) {
+		query := c.PostForm("query")
+		if query == "" {
+			//	返回所有article
+			return
+		}
+		orSearch := forever.OrSearch(query)
+		docs := orSearch.Docs
+		m := forever.GetSearchResultFromRiot(docs)
+		// c.JSON(200, orSearch.Docs)
+		c.HTML(200, "detail_parent.html", gin.H{
+			"options": m,
+		})
+	})
 
 	//sealaw.GET("/search",)
 

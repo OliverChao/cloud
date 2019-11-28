@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/go-ego/riot/types"
 	uuid "github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 	"os"
@@ -52,9 +53,8 @@ func AddFileToKind(kindname, filepath, title, hashdata string, count int) {
 		// 先入mysql 会更新 article的值, 补全后,再存入redis
 		_ = addArticleMutex(article)
 		addArticleInfoToRedis(article)
-
 		// update search engine
-		//search.AddDoc(kindname, title)
+		AddDoc(kindname, title)
 	}()
 
 	kind := &model.Kind{
@@ -77,11 +77,12 @@ func addArticleInfoToRedis(a *model.Article) {
 	client.HSet(data["kind"].(string), data["title"].(string), string(bytes_))
 }
 
-func GetArticleFromRedisByTitle(kindName, title string) map[string]string {
-	m := map[string]string{}
+func GetOneArticleFromRedisByTitle(kindName, title string) string {
 	get := client.HGet(kindName, title)
+	m := map[string]string{}
 	_ = json.Unmarshal([]byte(get.Val()), &m)
-	return m
+	logrus.Info(m["path"])
+	return m["path"]
 }
 
 func GetAllArticleFromRedis(kindName string) (map[string]string, error) {
@@ -90,7 +91,18 @@ func GetAllArticleFromRedis(kindName string) (map[string]string, error) {
 	if len(m) == 0 {
 		return m, errors.New("kind name no exists")
 	}
+	for k, _ := range m {
+		m[k] = kindName
+	}
 	return m, nil
+}
+
+func GetSearchResultFromRiot(docs []types.ScoredDoc) map[string]string {
+	m := map[string]string{}
+	for _, v := range docs {
+		m[v.Content] = v.Attri.(string)
+	}
+	return m
 }
 
 func addArticleMutex(a *model.Article) (err error) {
@@ -143,6 +155,8 @@ func DeleteArticleFunc(name, kind string) error {
 	}
 	//db.Model(&article).Delete(&article)
 	client.HDel(kind, name)
+	// 清除riot引擎索引
+	RiotDeleteDocByNameKind(kind, name)
 	return nil
 }
 

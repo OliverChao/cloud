@@ -1,13 +1,13 @@
 package handlerFuncs
 
 import (
-	"cloud/echo"
 	"cloud/forever"
 	"cloud/shadow"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -19,9 +19,9 @@ type User struct {
 }
 
 func Login(c *gin.Context) {
-	ret := echo.NewRetResult()
-	ret.Code = -1
-	defer c.JSON(200, ret)
+	// ret := echo.NewRetResult()
+	// ret.Code = -1
+	// defer c.JSON(200, ret)
 	var user User
 	if e := c.MustBindWith(&user, binding.FormPost); e != nil {
 		return
@@ -32,7 +32,10 @@ func Login(c *gin.Context) {
 	sum := sha.Sum(nil)
 	passwdSha256 := hex.EncodeToString(sum)
 	if e := forever.VerifyUser(user.Username, passwdSha256); e != nil {
-		ret.Msg = "login failed"
+		//弹窗
+		c.HTML(200, "hint.html", gin.H{})
+		c.HTML(200, "login.html", gin.H{})
+		// ret.Msg = "login failed"
 		return
 	}
 	dataBytes, _ := json.Marshal(user)
@@ -44,7 +47,8 @@ func Login(c *gin.Context) {
 	session.Set("token", token)
 	_ = session.Save()
 
-	ret.Code = 1
-	ret.Data = user
-	ret.Msg = token
+	c.HTML(200, "admin_index.html", gin.H{})
+	// ret.Code = 1
+	// ret.Data = user
+	// ret.Msg = token
 }
