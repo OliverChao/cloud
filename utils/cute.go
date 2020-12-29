@@ -32,9 +32,21 @@ func ReadDoc(path string) (string, error) {
 		return "", fmt.Errorf("pdf format")
 	}
 
+	// change this code block to python
 	s, e := cat.File(path)
 	if e != nil {
 		logrus.Error(e)
+		return "",nil
 	}
 	return s, nil
+}
+
+func UploadFilter(filename string) bool {
+	list := []string{".doc", ".docx", ".txt", ".pdf",}
+	for _, v := range list {
+		if strings.HasSuffix(filename, v) {
+			return true
+		}
+	}
+	return false
 }

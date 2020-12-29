@@ -2,8 +2,8 @@ package forever
 
 import (
 	"cloud/model"
+	"encoding/json"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"testing"
 )
 
@@ -86,7 +86,12 @@ func TestRedisRegister(t *testing.T) {
 }
 
 func TestMysqlDropAll(t *testing.T) {
-	MysqlDropAll()
+	//MysqlDropAll()
+	MysqlRegister()
+	a := &model.Admin{
+		Name: "admin",
+	}
+	db.Model(&a).Where("name = ?", a.Name).Update("password","qwe")
 	MysqlUnRegister()
 }
 
@@ -94,14 +99,18 @@ func TestRedisGetH(t *testing.T) {
 	RedisRegister()
 	//b:=IsExitsKind("topic_one")
 	//logrus.Info(b)
-	all := client.HGetAll("船泊")
-	err := all.Err()
-	if err != nil {
-		logrus.Error(err)
-	}
-	m := all.Val()
+	kind := "国际公约"
+	name := "t"
+	get := client.HGet(kind, name)
+	//s, _ := get.Result()
+	s := get.Val()
+	//fmt.Println(get.Result())
+	m := map[string]string{}
+	json.Unmarshal([]byte(s), &m)
 	fmt.Println(m)
-	fmt.Println(len(m))
+	fmt.Println(m["hash"])
+	fmt.Println(m["title"])
+
 	RedisUnRegister()
 }
 
@@ -138,6 +147,12 @@ func TestRedisHGetall(t *testing.T) {
 
 func TestMysqlInitData(t *testing.T) {
 	MysqlRegister()
+	var articleList []model.Article
+	db.Order("created_at desc,id").Limit(10).Find(&articleList)
+	//fmt.Println(articleList)
+	for _, v := range articleList {
+		fmt.Println(v.FullName)
+	}
 	MysqlUnRegister()
 	//MysqlInitData()
 }

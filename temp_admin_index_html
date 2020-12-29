@@ -1,0 +1,35 @@
+ <div class="container" style="text-align: center;">
+            <!-- <p>.table 类来设置基础表格的样式:</p>             -->
+            <small style="color: red;">类别</small>            
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>文件类别</th>
+                  <th>文件数量</th>
+                  <th>占用容量</th>
+                  <th>pdf数量</th>
+                  <th>docx数量</th>
+                  <th>doc数量</th>
+                  <th>txt数量</th>
+                  <th>图片数量</th>
+                </tr>
+              </thead>
+
+
+              <tbody>
+                <tr>
+                  <td>个人文档</td>
+                  <td>213</td>
+                  <td>213</td>
+                  <td>213</td>
+                  <td>213</td>
+                  <td>213</td>
+                  <td>213</td>
+                  <td>213</td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+
+ 

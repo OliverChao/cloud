@@ -67,6 +67,10 @@ func AddFileToKind(kindname, filepath, title, hashdata string, count int) {
 	i, _ := strconv.Atoi(val)
 	changeNum := i + count
 	client.HSet("kinds", kindname, changeNum)
+
+	// 强制刷新一次 redis content 字段
+	client.Expire("content", 0)
+
 	db.Model(&kind).Where("name like ?", kindname).Update("count", changeNum)
 }
 
@@ -155,6 +159,9 @@ func DeleteArticleFunc(name, kind string) error {
 	}
 	//db.Model(&article).Delete(&article)
 	client.HDel(kind, name)
+
+	// 清除 redis中content内容...
+	client.HDel("content", article.Path)
 	// 清除riot引擎索引
 	RiotDeleteDocByNameKind(kind, name)
 	return nil
@@ -175,6 +182,10 @@ func DeleteKindFunc(kind string) error {
 	//清除 redis 数据
 	client.Expire(kind, 0)
 
+	// 清理一遍redis 数据库缓存
+	client.Expire("content", 0)
+
+	//
 	db.Where("kind_name like ?", kind).Delete(model.Article{})
 	db.Where("name like ?", kind).Delete(model.Kind{})
 
@@ -184,4 +195,14 @@ func DeleteKindFunc(kind string) error {
 		logrus.Error(err)
 	}
 	return nil
+}
+
+func GetLastTenFilesInfo() []model.Article {
+	var articleList []model.Article
+	db.Order("created_at desc,id").Limit(20).Find(&articleList)
+	//fmt.Println(articleList)
+	//for _, v := range articleList {
+	//	fmt.Println(v.FullName)
+	//}
+	return articleList
 }

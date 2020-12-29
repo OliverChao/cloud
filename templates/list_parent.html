@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>海事法规文库</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/pan//bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/pan/css/search.css">
+  <script src="/pan/js/jquery.min.js"></script>
+  <script src="/pan/js/popper.min.js"></script>
+  <script src="/pan/bootstrap/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+
+    <nav class="breadcrumb">
+        <a class="breadcrumb-item active" href="/sealaw/list_parent">类别</a>
+    </nav>
+  
+<div class="container">
+  <div style="height: 600px; padding-top:10px ;" >
+
+      <div class="container_">
+          <form action="/search_parent" method="post" class="parent_">
+            <!-- <input type="text" class="search_" name="query" placeholder="搜索">
+            <input type="submit"  class="btn_"/> -->
+            <input type="text" class="search_" name="query" />
+            <input type="submit" class="btn" value="搜索" />
+          </form>
+      </div>
+
+     <div class="list-group">
+    {{range $key,$ele :=.options}}
+    <a class="list-group-item list-group-item-action" style="margin: 1px;" href="/sealaw/kinds_parent/{{$key}}">
+      <div style="height: 30px;" class="list-group">
+       <p style="color: black;"><img class="rounded" style="height: 30px;width: 30px; position:relative;" src="/pan/image/list.png"/>{{$key}}
+        </p>
+       <!-- count: {{$ele}} -->
+       <small style="position: absolute; right: 10px;">{{$ele}}</small>
+       </div>
+
+      </a>
+    {{end}}
+     </div>
+
+
+
+  </div>
+</div>
+<!-- <center><p class="small">下面还有哦</p></center> -->
+
+</body>
+</html>

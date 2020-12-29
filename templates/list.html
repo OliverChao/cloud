@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>海事法规文库</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/pan//bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/pan/css/search.css">
+  <script src="/pan/js/jquery.min.js"></script>
+  <script src="/pan/js/popper.min.js"></script>
+  <script src="/pan/bootstrap/js/bootstrap.min.js"></script>
+  <style>
+      body 
+      {
+        background-color:antiquewhite;
+      }
+    </style>
+</head>
+<body>
+
+
+    <nav  class="navbar navbar-expand-sm bg-dark navbar-dark fixed-top">
+
+    <div class="container">
+    <ul class="nav nav-pills">
+        <li>
+            <a class="nav-link disabled" href="/sealaw/list">海事法律法规</a>
+        </li>
+
+      <li class="nav-item ">
+        <a class="nav-link active" href="/sealaw/list">类别</a>
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link" href="#">文档</a>
+      </li>
+
+    </ul>
+    </div>
+    </nav>
+  
+<div class="container" style="margin-top: 60px;">
+  <div style="height: 800px; padding-top:10px ;" >
+
+      <div class="container_">
+          <form action="" method="post" class="parent_">
+            <!-- <input type="text" class="search_" name="query" placeholder="搜索">
+            <input type="submit"  class="btn_"/> -->
+            <input type="text" class="search_" name="query" />
+            <input type="submit" class="btn" value="搜索" />
+          </form>
+        </div>
+
+     <div class="list-group">
+    {{range $key,$ele :=.options}}
+    <a class="list-group-item list-group-item-action" style="margin: 1px;" href="/sealaw/kinds/{{$key}}">
+      <div style="height: 30px;" class="list-group">
+       <p style="color: black;"><img class="rounded" style="height: 30px;width: 30px; position:relative;" src="/pan/image/list.png"/>    {{$key}} </p>
+       <!-- count: {{$ele}} -->
+       </div>
+      </a>
+    {{end}}
+     </div>
+
+
+
+  </div>
+</div>
+<!-- <center><p class="small">下面还有哦</p></center> -->
+
+</body>
+</html>

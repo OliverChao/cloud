@@ -17,6 +17,8 @@ func init() {
 	//logrus.SetLevel(logrus.DebugLevel)
 	//iFcon := baseCon.InitIFcon()
 	logrus.SetLevel(logrus.DebugLevel)
+
+	//gin.SetMode(gin.ReleaseMode)
 }
 
 func main() {

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>类别详情</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/pan//bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/pan/css/search.css">
+  <script src="/pan/js/jquery.min.js"></script>
+  <script src="/pan/js/popper.min.js"></script>
+  <script src="/pan/bootstrap/js/bootstrap.min.js"></script>
+  <script src="/pan/js/current.js"></script>
+
+</head>
+<body>
+
+
+    <nav class="breadcrumb">
+        <a class="breadcrumb-item" href="/sealaw/list_parent">类别</a>
+        <span class="breadcrumb-item active">文件</span>
+    </nav>
+
+    <div class="container">
+
+
+   <div class="list-group">
+      {{range $key,$ele :=.options}}   
+      <form action="/api/delete/article" method="post"  onsubmit="return check_del(this)">
+        <div style="height: 30px; margin: 5px;" class="list-group">
+          <p  style="color: black;">
+            <img class="rounded" style="height: 30px; width: 30px; position:relative;" src="/pan/image/detail.png"/>
+            <input style="display: none;" type="text" name="kind" value="{{$ele}}"/>
+            <input style="display: none;" type="text" name="name" value="{{$key}}"/>
+            <input style="float: right;" type="submit" class="btn btn-warning" value="删除" /> 
+            <samll style="color: red; position: absolute; left: 300px;">文件类型</samll>
+            <samll style="color: red; position: absolute; left: 400px;">文件大小</samll>
+            {{$key}} 
+          </p>
+        </div>
+      </form>
+    {{end}}
+    </div>
+
+  </div>
+</div>
+</div>
+<!-- <center><p class="small">下面还有哦</p></center> -->
+
+</body>
+</html>

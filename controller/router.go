@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"cloud/config/baseCon"
 	"cloud/controller/handlerFuncs"
 	"cloud/controller/middleware"
 	"cloud/forever"
@@ -14,10 +15,15 @@ import (
 )
 
 func RegisterRouterMap() *gin.Engine {
-	engine := gin.Default()
-	//engine := gin.New()
-	//engine.Use(gin.Recovery())
-	//engine.Use(gin.Logger())
+	//engine := gin.Default()
+	baseConf := baseCon.LoadBaseConfig()
+	ipAddress := baseConf.IP
+	engine := gin.New()
+
+	// logger ..
+	engine.Use(gin.Logger())
+
+	engine.Use(gin.Recovery())
 	//sessionRedis.NewStore()
 	store := cookie.NewStore([]byte("secret"))
 	store.Options(sessions.Options{
@@ -32,8 +38,36 @@ func RegisterRouterMap() *gin.Engine {
 	engine.Static("/pan", "./pan")
 	engine.StaticFS("/resource", http.Dir("resource"))
 
-	engine.Any("/", func(c *gin.Context) {
-		c.JSON(200, "Yoo~~~ Hello~~~ iFei~~~")
+	engine.GET("/", func(c *gin.Context) {
+		//c.Request.URL.Path = "/sealaw/list"
+		//engine.HandleContext(c)
+		c.Redirect(http.StatusSeeOther, "/sealaw/list")
+		return
+	})
+
+	engine.GET("/admin", func(c *gin.Context) {
+		//c.Request.URL.Path = "/auth/admin_index"
+		//engine.HandleContext(c)
+		c.Redirect(http.StatusSeeOther, ipAddress+"/auth/admin_index")
+		c.Abort()
+		return
+	})
+
+	// logout router
+	engine.GET("/logout", func(c *gin.Context) {
+		session := sessions.Default(c)
+		session.Options(sessions.Options{
+			Path:   "/",
+			MaxAge: -1,
+		})
+		session.Clear()
+		if err := session.Save(); nil != err {
+			logrus.Errorf("saves session failed: " + err.Error())
+		}
+		//	`调到登`入页
+		c.Redirect(http.StatusSeeOther,ipAddress+"/cloud/login")
+		c.Abort()
+		return
 	})
 
 	engine.GET("/connect_me", func(c *gin.Context) {
@@ -43,6 +77,7 @@ func RegisterRouterMap() *gin.Engine {
 	engine.GET("/cloud/login", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "login.html", gin.H{})
 	})
+
 	engine.POST("/cloud/login", handlerFuncs.Login)
 
 	engine.GET("/search", func(c *gin.Context) {
@@ -96,7 +131,18 @@ func RegisterRouterMap() *gin.Engine {
 
 	auth := engine.Group("/auth")
 	auth.Use(middleware.LoginCheck)
-	//auth.GET("/upload")
+
+
+	auth.Any("/change/pass",handlerFuncs.ChangePasswdFun)
+
+	//**************************
+	// 数据库,
+	auth.GET("/test_db", func(c *gin.Context) {
+		articles := forever.GetLastTenFilesInfo()
+		c.JSON(200, articles)
+	})
+
+	//********************
 
 	auth.GET("/upload", func(c *gin.Context) {
 		m := forever.GetAllKindFromRedis()
@@ -108,12 +154,16 @@ func RegisterRouterMap() *gin.Engine {
 	})
 
 	// 渲染页面
-	auth.GET("/admin_index", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "admin_index.html", gin.H{})
-	})
+	//auth.GET("/", func(c *gin.Context) {
+	//	c.HTML(http.StatusOK, "admin_index.html", gin.H{})
+	//})
+	auth.GET("/admin_index", handlerFuncs.Show_index)
 
 	auth.GET("/admin_del", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "admin_del.html", gin.H{})
+	})
+	auth.GET("/download", func(c *gin.Context) {
+		c.HTML(200, "admin_download.html", gin.H{})
 	})
 
 	//engine.POST("/upload", func(c *gin.Context) {
@@ -128,7 +178,6 @@ func RegisterRouterMap() *gin.Engine {
 		c.HTML(200, "admin_createkind.html", gin.H{
 			"options": m,
 		})
-
 	})
 
 	auth.POST("/createkind", func(c *gin.Context) {
@@ -274,7 +323,6 @@ func RegisterRouterMap() *gin.Engine {
 		if err != nil {
 			logrus.Error("verify failed")
 		} else {
-
 		}
 	})
 

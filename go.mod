@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/GoAdminGroup/go-admin v1.0.7
 	github.com/GoAdminGroup/themes v0.0.7
+	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
 	github.com/b3log/lute v0.0.0-20191112142817-b470985ce2fc
 	github.com/denisenkom/go-mssqldb v0.0.0-20191001013358-cfbb681360f0 // indirect
 	github.com/elastic/go-elasticsearch/v7 v7.4.1

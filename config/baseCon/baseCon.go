@@ -17,6 +17,7 @@ type BaseConfig struct { //	redisOp := &redis.Options{
 	Host     string
 	Port     int
 	LogLevel logrus.Level
+	IP       string
 }
 
 func LoadBaseConfig() *BaseConfig {
@@ -26,6 +27,7 @@ func LoadBaseConfig() *BaseConfig {
 		//MysqlUri: mysqlSign,
 		//RedisUri: redisOp,
 		LogLevel: logrus.InfoLevel,
+		IP:       "http://127.0.0.1:8080",
 	}
 	return IFcon
 }

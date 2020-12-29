@@ -37,6 +37,16 @@ func VerifyUser(name, passwd string) error {
 	return nil
 }
 
+func UpdateAdminPasswd(adminName,newPasswd string) {
+	//db.Model(&admin).Where()
+	a := &model.Admin{
+		Name: adminName,
+	}
+	db.Model(&a).Where("name = ?", a.Name).Update("password",newPasswd)
+	//a.Password = newPasswd
+	//db.Save(&a)
+}
+
 //func GetArticleByID(id int)model.Article{
 //
 //}

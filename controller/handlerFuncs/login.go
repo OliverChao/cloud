@@ -1,16 +1,17 @@
 package handlerFuncs
 
 import (
+	"cloud/config/baseCon"
 	"cloud/forever"
 	"cloud/shadow"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"net/http"
 )
 
 type User struct {
@@ -51,4 +52,30 @@ func Login(c *gin.Context) {
 	// ret.Code = 1
 	// ret.Data = user
 	// ret.Msg = token
+}
+
+func ChangePasswdFun(c *gin.Context){
+	oldPasswd := c.PostForm("oldPasswd")
+	newPasswd := c.PostForm("newPasswd")
+
+	var user User
+	session := sessions.Default(c)
+	token, _ := session.Get("token").(string)
+	data, _ := shadow.UnParseToken(token)
+	_ = json.Unmarshal(data, &user)
+	if oldPasswd != user.Passwd || newPasswd == user.Passwd{
+		c.String(200,"failed")
+		return
+	}
+
+	sha := sha256.New()
+	sha.Write([]byte(user.Passwd))
+	sum := sha.Sum(nil)
+	passwdSha256 := hex.EncodeToString(sum)
+	forever.UpdateAdminPasswd(user.Username, passwdSha256)
+	//
+	baseConfig := baseCon.LoadBaseConfig()
+	ipAddress := baseConfig.IP
+	c.Redirect(http.StatusSeeOther, ipAddress+"/logout")
+	//c.String(200,"successfully")
 }
